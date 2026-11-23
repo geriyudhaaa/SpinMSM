@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSM Lucky Spin</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0b0b;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        #loginScreen, .box-card {
+            background: #141414;
+            border: 1px solid #bf953f;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+
+        .box-card.dev-dashboard {
+            max-width: 800px;
+            text-align: left;
+        }
+
+        h1, h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        p.subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        .container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            width: 480px;
+            height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wheel-svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 45px rgba(191, 149, 63, 0.35), 
+                        inset 0 0 25px rgba(0, 0, 0, 0.9);
+            border: 6px solid #1a1a1a;
+        }
+
+        .right-nail-container {
+            position: absolute;
+            right: -10px;
+            top: 55%;
+            transform: translateY(-90%);
+            width: 50px;
+            height: 40px;
+            z-index: 20; 
+            pointer-events: none;
+            animation: tipSway 1.5s ease-in-out infinite alternate;
+            transform-origin: right center;
+        }
+
+        @keyframes tipSway {
+            0% { transform: translateY(-90%) rotate(-3deg); }
+            100% { transform: translateY(-90%) rotate(3deg); }
+        }
+
+        .nail-element {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ffffff 0%, #757575 50%, #212121 100%);
+            clip-path: polygon(0% 50%, 100% 0%, 85% 50%, 100% 100%);
+            box-shadow: -4px 4px 12px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .nail-element::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 15%;
+            width: 7px;
+            height: 70%;
+            background: #fcf6ba;
+            border-radius: 2px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .spin-btn, .modal-btn {
+            width: 100%;
+            padding: 12px 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #111;
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 100%);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(191, 149, 63, 0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spin-btn {
+            border-radius: 50px;
+            padding: 12px 35px;
+        }
+
+        .spin-btn:hover, .modal-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .spin-btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 999;
+        }
+
+        .modal.active {
+            display: flex !important;
+        }
+
+        .modal-content {
+            background: #141414;
+            border: 1px solid #bf953f;
+            padding: 25px 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            border: 1px solid #bf953f;
+            background: #222;
+            color: #fff;
+            font-size: 1rem;
+            text-align: center;
+            outline: none;
+        }
+
+        .table-container {
+            overflow-y: auto;
+            max-height: 350px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #222;
+        }
+
+        th {
+            background: #1e1e1e;
+            color: #bf953f;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #1a1a1a;
+        }
+
+        .logout-btn {
+            background: #333;
+            color: #aaa;
+            border: 1px solid #444;
+            margin-top: 15px;
+        }
+
+        .dev-control-box {
+            background: #1e1e1e;
+            border: 1px dashed #bf953f;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen" class="screen active">
+        <h2>LOGIN MEMBER</h2>
+        <input type="text" id="userIdInput" class="login-input" placeholder="Masukkan ID" autocomplete="off" />
+        <input type="password" id="userPasswordInput" class="login-input" placeholder="Masukkan Password" autocomplete="off" />
+        
+        <button class="modal-btn" onclick="doLogin()">Masuk</button>
+        <button class="modal-btn" onclick="showForgot()" style="background: transparent; border: 1px solid #444; color: #888; font-size: 0.8rem; margin-top: 5px;">Lupa Password?</button>
+    </div>
+
+    <div id="mainApp" class="screen">
+        <h1>MSM</h1>
+         <h1>Spin Wheel</h1>
+        <p class="subtitle">Semoga Beruntung Guys</p>
+
+        <div class="container">
+            <div class="wheel-wrapper">
+                <div class="right-nail-container">
+                    <div class="nail-element"></div>
+                </div>
+                <svg id="wheelSvg" class="wheel-svg" viewBox="0 0 500 500"></svg>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="spin-btn" id="spinBtn" onclick="startSpin()">Putar Roda</button>
+        </div>
+        <button class="modal-btn logout-btn" onclick="doLogout()" style="max-width: 200px; margin-top: 20px;">Keluar</button>
+    </div>
+
+    <div id="devDashboard" class="screen">
+        <div class="box-card dev-dashboard">
+            <h2>DEVELOPER DASHBOARD</h2>
+            <p class="subtitle" style="margin-bottom: 15px;">Atur Jatah Putaran User & Pemantau Hasil Spin</p>
+            
+            <div class="dev-control-box">
+                <input type="text" id="targetUserId" class="login-input" placeholder="ID User (misal MSM001)" style="margin-bottom:0; font-size:0.85rem;" />
+                <input type="number" id="addSpinAmount" class="login-input" placeholder="Tambah Berapa Spin" style="margin-bottom:0; font-size:0.85rem; max-width: 150px;" min="1" value="1" />
+                <button class="modal-btn" onclick="grantExtraSpin()" style="margin-top:0; width: auto; white-space: nowrap; font-size: 0.8rem;">Beri Spin</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>ID Player</th>
+                            <th>Tier / Digit</th>
+                            <th>Hadiah Didapat</th>
+                        </tr>
+                    </thead>
+                    <tbody id="devLogTableBody"></tbody>
+                </table>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="modal-btn" onclick="clearDevLogs()" style="background: #C62828; color: #fff;">Hapus Semua Log</button>
+                <button class="modal-btn logout-btn" onclick="doLogout()" style="margin-top: 0;">Logout Dev</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="forgotModal">
+        <div class="modal-content">
+            <h2>RESET PASSWORD</h2>
+            <input type="text" id="forgotIdInput" class="login-input" placeholder="Masukkan ID Anda" autocomplete="off" />
+            <input type="password" id="forgotNewPassInput" class="login-input" placeholder="Password Baru" autocomplete="off" />
+            <button class="modal-btn" onclick="doResetPass()">Reset Password</button>
+            <button class="modal-btn" onclick="hideForgot()" style="background: #333; color: #fff;">Batal</button>
+        </div>
+    </div>
+
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <h2>SELAMAT ANDA MEMENANGKAN!</h2>
+            <p id="winnerText" style="font-size: 1.1rem; color: #fcf6ba; font-weight: bold; margin: 10px 0;">Sertifikat</p>
+            <h2 style="margin-top:5px; font-size: 1rem;">Silahkan Hubungi Trainer Anda</h2>
+            <button class="modal-btn" onclick="hideResultModal()">Tutup</button>
+        </div>
+    </div>
+
+    <script>
+        const userDatabase = {
+            "Geriganteng": { pass: "Gery420?", role: "developer" },
+            "Geri1": { pass: "Gery420?", maxSpin: 1, role: "user" },
+            "Geri2": { pass: "Gery420?", maxSpin: 1, role: "user" },
+            "Geri4": { pass: "Gery420?", maxSpin: 1, role: "user" },
+            "Geri8": { pass: "Gery420?", maxSpin: 1, role: "user" },
+            "Geri9": { pass: "Gery420?", maxSpin: 1, role: "user" }
+        };
+
+        const items = [
+            { name: "Sertifikat", color: "#4A154B" }, 
+            { name: "Cash 300K", color: "#1E5631" },
+            { name: "Pulsa 5K", color: "#004B87" },      
+            { name: "Blind Box", color: "#6A1B9A" },
+            { name: "Cash 100K", color: "#2E7D32" },
+            { name: "Kupon Promosi", color:"#FF007F" },          
+            { name: "Cash 200K", color: "#1565C0" },             
+            { name: "Emas 0.1 Gram", color: "#D4AF37" },            
+            { name: "Emas 2 Gram", color: "#EFFF00" },   
+            { name: "Emas 1 Gram", color: "#FF5E00" },
+            { name: "Emas 3 Gram", color: "#B78149" }
+        ];
+
+        let currentRotation = 0;
+        let isSpinning = false;
+        let loggedUserId = "";
+        let lastDigit = 0;
+
+        let userSpinCounts = JSON.parse(localStorage.getItem('dev_user_spins')) || {};
+        let userBonusSpins = JSON.parse(localStorage.getItem('dev_user_bonus_spins')) || {};
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function doLogin() {
+            const idVal = document.getElementById('userIdInput').value.trim();
+            const passVal = document.getElementById('userPasswordInput').value.trim();
+
+            if (!idVal || !passVal) {
+                alert("ID dan Password tidak boleh kosong!");
+                return;
+            }
+
+            if (!userDatabase[idVal] || userDatabase[idVal].pass !== passVal) {
+                alert("Login Gagal! ID atau Password salah.");
+                return;
+            }
+
+            loggedUserId = idVal;
+            const account = userDatabase[idVal];
+
+            if (account.role === "developer") {
+                loadDevDashboard();
+                switchScreen('devDashboard');
+            } else {
+                const digits = idVal.match(/\d/g);
+                lastDigit = digits ? parseInt(digits[digits.length - 1]) : 0;
+
+                if (userSpinCounts[loggedUserId] === undefined) {
+                    userSpinCounts[loggedUserId] = 0;
+                }
+
+                updateSpinLimitUI();
+                switchScreen('mainApp');
+                renderWheel();
+            }
+        }
+
+        function doLogout() {
+            loggedUserId = "";
+            currentRotation = 0;
+            const wheelSvg = document.getElementById('wheelSvg');
+            if (wheelSvg) {
+                wheelSvg.style.transition = 'none';
+                wheelSvg.style.transform = 'rotate(0deg)';
+            }
+            document.getElementById('userIdInput').value = "";
+            document.getElementById('userPasswordInput').value = "";
+            switchScreen('loginScreen');
+        }
+
+        function grantExtraSpin() {
+            const targetId = document.getElementById('targetUserId').value.trim();
+            const amount = parseInt(document.getElementById('addSpinAmount').value) || 1;
+
+            if (!targetId || !userDatabase[targetId]) {
+                alert("ID User tidak ditemukan di database!");
+                return;
+            }
+
+            userBonusSpins[targetId] = (userBonusSpins[targetId] || 0) + amount;
+            localStorage.setItem('dev_user_bonus_spins', JSON.stringify(userBonusSpins));
+
+            alert(`Berhasil menambahkan ${amount} putaran spin untuk user ${targetId}!`);
+            document.getElementById('targetUserId').value = "";
+        }
+
+        function loadDevDashboard() {
+            const logs = JSON.parse(localStorage.getItem('dev_spin_logs')) || [];
+            let rows = '';
+            if (logs.length === 0) {
+                rows = `<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat putaran dari member.</td></tr>`;
+            } else {
+                logs.forEach(log => {
+                    rows += `
+                        <tr>
+                            <td>${log.time}</td>
+                            <td><strong>${log.id}</strong></td>
+                            <td>${log.tier}</td>
+                            <td style="color: #fcf6ba; font-weight: bold;">${log.prize}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('devLogTableBody').innerHTML = rows;
+        }
+
+        function clearDevLogs() {
+            if (confirm("Yakin ingin menghapus seluruh log kemenangan?")) {
+                localStorage.removeItem('dev_spin_logs');
+                loadDevDashboard();
+            }
+        }
+
+        function updateSpinLimitUI() {
+            const baseMax = userDatabase[loggedUserId].maxSpin || 1;
+            const bonus = userBonusSpins[loggedUserId] || 0;
+            const totalAllowed = baseMax + bonus;
+            const used = userSpinCounts[loggedUserId] || 0;
+
+            const spinBtn = document.getElementById('spinBtn');
+
+            if (used < totalAllowed) {
+                spinBtn.disabled = false;
+            } else {
+                spinBtn.disabled = true;
+            }
+        }
+
+        function showForgot() {
+            document.getElementById('forgotModal').classList.add('active');
+        }
+
+        function hideForgot() {
+            document.getElementById('forgotModal').classList.remove('active');
+        }
+
+        function doResetPass() {
+            const idVal = document.getElementById('forgotIdInput').value.trim();
+            const newPass = document.getElementById('forgotNewPassInput').value.trim();
+
+            if (!idVal || !newPass) {
+                alert("Isi ID dan Password baru!");
+                return;
+            }
+
+            if (!userDatabase[idVal]) {
+                alert("ID tidak terdaftar!");
+                return;
+            }
+
+            userDatabase[idVal].pass = newPass;
+            alert("Password berhasil diubah!");
+            hideForgot();
+        }
+
+        function renderWheel() {
+            const svg = document.getElementById('wheelSvg');
+            const centerX = 250;
+            const centerY = 250;
+            const radius = 240;
+            const total = items.length;
+            const angleStep = 360 / total;
+
+            let svgContent = '';
+            items.forEach((item, index) => {
+                const startAngle = index * angleStep;
+                const endAngle = (index + 1) * angleStep;
+
+                const x1 = centerX + radius * Math.cos((Math.PI * startAngle) / 180);
+                const y1 = centerY + radius * Math.sin((Math.PI * startAngle) / 180);
+                const x2 = centerX + radius * Math.cos((Math.PI * endAngle) / 180);
+                const y2 = centerY + radius * Math.sin((Math.PI * endAngle) / 180);
+
+                const largeArcFlag = angleStep > 180 ? 1 : 0;
+                const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+
+                const textAngle = startAngle + angleStep / 2;
+                const textRadius = radius - 65;
+                const textX = centerX + textRadius * Math.cos((Math.PI * textAngle) / 180);
+                const textY = centerY + textRadius * Math.sin((Math.PI * textAngle) / 180);
+
+                svgContent += `
+                    <path d="${pathData}" fill="${item.color}" stroke="#bf953f" stroke-width="2" />
+                    <text x="${textX}" y="${textY}" fill="#ffffff" font-size="10" font-weight="bold" font-family="'Segoe UI', sans-serif" text-anchor="middle" dominant-baseline="middle" transform="rotate(${textAngle + 90}, ${textX}, ${textY})" filter="drop-shadow(0px 0px 2px #000000)">
+                        ${item.name}
+                    </text>
+                `;
+            });
+
+            svgContent += `<circle cx="${centerX}" cy="${centerY}" r="38" fill="#111111" stroke="#bf953f" stroke-width="4" />`;
+            svg.innerHTML = svgContent;
+        }
+
+        function getWinningIndex(digit) {
+            let possibleIndices = [];
+            if (digit <= 1) possibleIndices = [0,]; 
+            else if (digit <= 2) possibleIndices = [2,5]; 
+            else if (digit <= 4) possibleIndices = [3,4,]; 
+            else if (digit <= 8) possibleIndices = [1,4,6,7]; 
+            else possibleIndices = [8,9,10]; 
+
+            return possibleIndices[Math.floor(Math.random() * possibleIndices.length)];
+        }
+
+        function startSpin() {
+            if (isSpinning) return;
+            if (!loggedUserId) return;
+
+            const baseMax = userDatabase[loggedUserId].maxSpin || 1;
+            const bonus = userBonusSpins[loggedUserId] || 0;
+            const totalAllowed = baseMax + bonus;
+            const used = userSpinCounts[loggedUserId] || 0;
+
+            if (used >= totalAllowed) {
+                alert("Kesempatan spin Anda sudah habis!");
+                return;
+            }
+
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+
+            userSpinCounts[loggedUserId] = used + 1;
+            localStorage.setItem('dev_user_spins', JSON.stringify(userSpinCounts));
+
+            const winningIndex = getWinningIndex(lastDigit);
+            const wonPrize = items[winningIndex].name;
+
+            const totalItems = items.length;
+            const angleStep = 360 / totalItems;
+            const targetSegmentCenter = winningIndex * angleStep + (angleStep / 2);
+            
+            const currentMod = currentRotation % 360;
+            const targetMod = (360 - targetSegmentCenter) % 360;
+            let delta = targetMod - currentMod;
+            if (delta <= 0) {
+                delta += 360;
+            }
+            
+            currentRotation += (360 * 5) + delta;
+
+            const wheelSvg = document.getElementById('wheelSvg');
+            wheelSvg.style.transition = 'transform 4.5s cubic-bezier(0.15, 0.85, 0.15, 1)';
+            wheelSvg.style.transform = `rotate(${currentRotation}deg)`;
+
+            const logData = {
+                time: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString(),
+                id: loggedUserId,
+                tier: `Digit ${lastDigit}`,
+                prize: wonPrize
+            };
+            
+            let logs = JSON.parse(localStorage.getItem('dev_spin_logs')) || [];
+            logs.unshift(logData);
+            localStorage.setItem('dev_spin_logs', JSON.stringify(logs));
+
+            setTimeout(() => {
+                isSpinning = false;
+                updateSpinLimitUI();
+                document.getElementById('winnerText').innerText = wonPrize;
+                document.getElementById('resultModal').classList.add('active');
+            }, 4500);
+        }
+
+        function hideResultModal() {
+            document.getElementById('resultModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
